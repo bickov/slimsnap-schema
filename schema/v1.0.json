@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slimsnap.ai/schema/v1.0.json",
+  "title": "SlimSnap Export",
+  "description": "Structured screenshot output for AI agents — pasteable as text into terminal-based agents like Claude Code, Aider, and Codex CLI.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "captured_at",
+    "image",
+    "elements",
+    "annotations",
+    "estimated_tokens"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "SlimSnap schema version. Increment on breaking changes."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of when the screenshot was captured."
+    },
+    "image": {
+      "type": "object",
+      "required": ["width_px", "height_px", "file"],
+      "properties": {
+        "width_px":  { "type": "integer", "minimum": 1 },
+        "height_px": { "type": "integer", "minimum": 1 },
+        "file":      {
+          "type": "string",
+          "description": "Original filename of the source image, if available."
+        }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "description": "Optional metadata about the captured surface.",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the captured window/tab." },
+        "app":   { "type": "string", "description": "Application name (e.g., 'Safari')." },
+        "url":   { "type": "string", "description": "URL if the captured surface was a web page." }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "description": "Detected UI elements with OCR text and bounding boxes.",
+      "items": { "$ref": "#/$defs/element" }
+    },
+    "annotations": {
+      "type": "array",
+      "description": "User-drawn annotations (arrows, rectangles, callouts, highlights).",
+      "items": { "$ref": "#/$defs/annotation" }
+    },
+    "ai_enrichment": {
+      "description": "Optional LLM-generated metadata (intent, suggested actions). Null if not enriched.",
+      "oneOf": [
+        { "type": "object" },
+        { "type": "null" }
+      ]
+    },
+    "estimated_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Approximate token count when this JSON is fed to an LLM."
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array",
+      "items": { "type": "number", "minimum": 0, "maximum": 1 },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x, y, width, height] in normalized 0-1 coordinates relative to the image."
+    },
+    "point": {
+      "type": "array",
+      "items": { "type": "number", "minimum": 0, "maximum": 1 },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[x, y] in normalized 0-1 coordinates."
+    },
+    "element": {
+      "type": "object",
+      "required": ["id", "type", "bbox"],
+      "properties": {
+        "id":    { "type": "string" },
+        "type":  { "enum": ["text", "button", "input", "link", "image", "label", "unknown"] },
+        "value": { "description": "Text content or structured value of the element." },
+        "bbox":  { "$ref": "#/$defs/bbox" },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Average color of the element region, e.g. '#3B82F6'."
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "required": ["id", "type", "color"],
+      "properties": {
+        "id":         { "type": "string" },
+        "type":       { "enum": ["arrow", "rectangle", "highlight", "callout", "note"] },
+        "color":      { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "from":       { "$ref": "#/$defs/point" },
+        "to":         { "$ref": "#/$defs/point" },
+        "position":   { "$ref": "#/$defs/point" },
+        "bbox":       { "$ref": "#/$defs/bbox" },
+        "text":       { "type": "string" },
+        "target_ref": { "type": "string", "description": "ID of the element this annotation references." },
+        "intent":     { "enum": ["highlight", "explain", "action", "question"] }
+      }
+    }
+  }
+}
