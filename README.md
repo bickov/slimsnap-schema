@@ -6,7 +6,7 @@ Terminal-based AI agents — [Claude Code](https://www.anthropic.com/claude-code
 
 SlimSnap is a Mac app that turns any screenshot into a small JSON blob: OCR'd text, element bounding boxes, your annotations. You paste it into the terminal like code. Your agent reads it like code.
 
-This repository is the open, MIT-licensed **specification** of that JSON format. The desktop app that produces it is closed and paid; the format itself is free for anyone to read, write, validate, or implement.
+This repository is the open, MIT-licensed **specification** of that JSON format. The desktop app that produces it is closed-source (free during launch, with a paid tier planned); the format itself is free for anyone to read, write, validate, or implement.
 
 → Get the app: **[slimsnap.ai](https://slimsnap.ai)**
 
