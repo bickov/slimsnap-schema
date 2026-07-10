@@ -1,0 +1,82 @@
+{
+  "schema_version": "2.0",
+  "captured_at": "2026-07-09T14:03:22.000000+00:00",
+  "mode": "scroll",
+  "capture": { "width_px": 1200, "height_px": 9400 },
+  "screen": {
+    "title": "Pricing — Acme",
+    "app": "Chrome",
+    "url": "https://acme.com/pricing"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "kind": "spatial",
+      "dims": { "width_px": 1200, "height_px": 4870 },
+      "position": { "scroll_y_px": 0 },
+      "elements": [
+        {
+          "id": "e1",
+          "type": "label",
+          "value": "Simple pricing",
+          "bbox": [0.32, 0.014, 0.36, 0.011]
+        },
+        {
+          "id": "e2",
+          "type": "button",
+          "value": "Start free",
+          "bbox": [0.41, 0.079, 0.18, 0.013],
+          "color": "#3B82F6"
+        },
+        {
+          "id": "e3",
+          "type": "text",
+          "value": "Pro — $12/mo",
+          "bbox": [0.12, 0.402, 0.2, 0.009]
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "type": "rectangle",
+          "color": "#EF4444",
+          "bbox": [0.1, 0.39, 0.35, 0.05],
+          "target_ref": "e3",
+          "intent": "question"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "kind": "spatial",
+      "dims": { "width_px": 1200, "height_px": 4530 },
+      "position": { "scroll_y_px": 4870 },
+      "elements": [
+        {
+          "id": "e4",
+          "type": "label",
+          "value": "Frequently asked questions",
+          "bbox": [0.3, 0.121, 0.4, 0.012]
+        },
+        {
+          "id": "e5",
+          "type": "link",
+          "value": "Contact sales",
+          "bbox": [0.44, 0.874, 0.12, 0.008]
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "type": "callout",
+          "color": "#10B981",
+          "bbox": [0.4, 0.85, 0.3, 0.04],
+          "text": "This link 404s",
+          "target_ref": "e5",
+          "intent": "action"
+        }
+      ]
+    }
+  ],
+  "estimated_tokens": 512
+}

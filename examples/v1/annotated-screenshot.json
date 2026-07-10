@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-05-19T19:42:11.508204+00:00",
+  "image": {
+    "width_px": 1280,
+    "height_px": 720,
+    "file": "checkout_bug.png"
+  },
+  "screen": {
+    "title": "Checkout — Acme",
+    "app": "Chrome",
+    "url": "https://app.acme.com/cart/checkout"
+  },
+  "elements": [
+    {
+      "id": "e1",
+      "type": "label",
+      "value": "Order summary",
+      "bbox": [0.05, 0.08, 0.22, 0.05]
+    },
+    {
+      "id": "e2",
+      "type": "text",
+      "value": "Total: $129.00",
+      "bbox": [0.05, 0.42, 0.18, 0.04]
+    },
+    {
+      "id": "e3",
+      "type": "button",
+      "value": "Pay now",
+      "bbox": [0.05, 0.55, 0.40, 0.08],
+      "color": "#10B981"
+    },
+    {
+      "id": "e4",
+      "type": "button",
+      "value": "Pay now",
+      "bbox": [0.55, 0.55, 0.40, 0.08],
+      "color": "#10B981"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "a1",
+      "type": "arrow",
+      "color": "#EF4444",
+      "from": [0.85, 0.30],
+      "to":   [0.75, 0.55],
+      "intent": "highlight"
+    },
+    {
+      "id": "a2",
+      "type": "callout",
+      "color": "#EF4444",
+      "bbox": [0.66, 0.18, 0.30, 0.08],
+      "text": "Duplicate Pay button — only the left one fires the API",
+      "target_ref": "e4",
+      "intent": "explain"
+    }
+  ],
+  "ai_enrichment": null,
+  "estimated_tokens": 489
+}

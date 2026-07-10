@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-05-19T18:17:46.142995+00:00",
+  "image": {
+    "width_px": 1440,
+    "height_px": 900,
+    "file": "screenshot_20260519_181746.png"
+  },
+  "screen": {
+    "title": "Login — Acme",
+    "app": "Safari",
+    "url": "https://app.acme.com/login"
+  },
+  "elements": [
+    {
+      "id": "e1",
+      "type": "label",
+      "value": "Sign in to your account",
+      "bbox": [0.36, 0.18, 0.28, 0.06]
+    },
+    {
+      "id": "e2",
+      "type": "input",
+      "value": "Email",
+      "bbox": [0.36, 0.32, 0.28, 0.06]
+    },
+    {
+      "id": "e3",
+      "type": "input",
+      "value": "Password",
+      "bbox": [0.36, 0.42, 0.28, 0.06]
+    },
+    {
+      "id": "e4",
+      "type": "button",
+      "value": "Sign in",
+      "bbox": [0.36, 0.54, 0.28, 0.07],
+      "color": "#3B82F6"
+    },
+    {
+      "id": "e5",
+      "type": "link",
+      "value": "Forgot password?",
+      "bbox": [0.42, 0.64, 0.16, 0.03]
+    }
+  ],
+  "annotations": [],
+  "ai_enrichment": null,
+  "estimated_tokens": 312
+}
