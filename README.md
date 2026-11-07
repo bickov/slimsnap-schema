@@ -2,7 +2,7 @@
 
 **The open JSON format for screenshots and screen recordings fed to AI agents.**
 
-Terminal-based AI agents — [Claude Code](https://www.anthropic.com/claude-code), [Aider](https://aider.chat), [Codex CLI](https://github.com/openai/codex), [Cursor CLI](https://docs.cursor.com/cli) — can't accept image input. To talk to them about a UI, you have to describe it in English. That's slow, lossy, and the agent still guesses where things are.
+Terminal-based AI agents such as [Claude Code](https://www.anthropic.com/claude-code), [Aider](https://aider.chat), [Codex CLI](https://github.com/openai/codex), [Cursor CLI](https://docs.cursor.com/cli), can't accept image input. To talk to them about a UI, you have to describe it in English. That is slow, and the agent still guesses where things are.
 
 SlimSnap is a Mac and Windows app that turns any screenshot into a small JSON blob: OCR'd text, element bounding boxes, your annotations. Since 0.6.0 it does the same for a screen recording: one frame per screen you visited, the clicks and scrolls that led from one to the next, and what you said while recording, as captions. You paste it into the terminal like code. Your agent reads it like code.
 
@@ -20,7 +20,7 @@ This repository is the open, MIT-licensed **specification** of that JSON format.
   "captured_at": "2026-07-09T18:17:46Z",
   "mode": "single",
   "capture": { "width_px": 1440, "height_px": 900 },
-  "screen": { "title": "Login — Acme", "app": "Safari" },
+  "screen": { "title": "Login - Acme", "app": "Safari" },
   "frames": [
     {
       "index": 0,
@@ -41,21 +41,21 @@ This repository is the open, MIT-licensed **specification** of that JSON format.
 }
 ```
 
-A typical 1440×900 screenshot is ~7,500 vision tokens. The same screen as SlimSnap JSON is ~600 text tokens. **~12× fewer tokens, same information, works anywhere text does.**
+A typical 1440×900 screenshot is ~7,500 vision tokens. The same screen as SlimSnap JSON is ~600 text tokens. **About 12 times fewer tokens, and it works anywhere text does.**
 
 ---
 
 ## Why a format, not just an OCR dump
 
-OCR alone gives you text without spatial meaning. A vision-model embedding gives you spatial meaning without text the agent can quote. SlimSnap gives the agent **both** in a layout it can reason about:
+OCR alone gives text with no idea where it sits on the screen. A vision model knows where things are but the agent cannot quote them. SlimSnap puts both in one layout the agent can work with:
 
-- **`frames`** — the unit of content. A regular screenshot is one frame; a scrollable capture (a whole page, a long chat, an endless feed) is several frames stacked top to bottom. Each frame is one coherent coordinate space.
-- **`elements`** — every visible UI primitive with a normalized `bbox` (so coordinates stay sane regardless of the image's pixel size).
-- **`annotations`** — what the human pointed at, as structured intent (`highlight`, `explain`, `action`, `question`), not just pixels of a red arrow.
-- **`screen`** — optional context (URL, window title, app name) that the model uses to disambiguate.
-- **Deterministic IDs** — every element and annotation has a stable string ID, unique across all frames, so the agent can refer back to "e4" instead of guessing "the green button on the right."
+- **`frames`**: the unit of content. A regular screenshot is one frame; a scrollable capture (a whole page, a long chat, an endless feed) is several frames stacked top to bottom. Each frame is one coherent coordinate space.
+- **`elements`**: every visible UI primitive with a normalized `bbox` (so coordinates stay sane regardless of the image's pixel size).
+- **`annotations`**: what the human pointed at, as structured intent (`highlight`, `explain`, `action`, `question`), not just pixels of a red arrow.
+- **`screen`**: optional context (URL, window title, app name) that the model uses to disambiguate.
+- **Deterministic IDs**: every element and annotation has a stable string ID, unique across all frames, so the agent can refer back to "e4" instead of guessing "the green button on the right."
 
-The result: agents stop hallucinating about what's in the image. They cite element IDs. They explain what your annotation arrow meant. They produce diffs against specific buttons.
+So the agent stops guessing what is in the image. It cites element ids like `e4`, reads what your arrow pointed at, and changes that one button.
 
 ---
 
@@ -96,7 +96,7 @@ The formal JSON Schema (draft 2020-12) lives at [`schema/v2.1.json`](schema/v2.1
 }
 ```
 
-Why frames: a 9,000px-tall scroll capture is useless as one coordinate space (a text line rounds to a 0.001-high bbox) and exceeds most canvas/vision limits as one image. Frames keep every capture — however long — in human-scale pages, each internally consistent. To get absolute pixel position of anything: `y_px = position.scroll_y_px + bbox_y * dims.height_px`.
+Why frames: a 9,000px-tall scroll capture is useless as one coordinate space (a text line rounds to a 0.001-high bbox) and exceeds most canvas/vision limits as one image. Frames keep every capture, however long, in human-scale pages, each internally consistent. To get absolute pixel position of anything: `y_px = position.scroll_y_px + bbox_y * dims.height_px`.
 
 ### Element
 
@@ -118,7 +118,7 @@ Why frames: a 9,000px-tall scroll capture is useless as one coordinate space (a 
   type:  "arrow" | "rectangle" | "highlight" | "callout" | "note";
   color: string;            // hex, e.g. "#EF4444"
 
-  // Geometry — only the relevant fields per type are set:
+  // Geometry: only the relevant fields per type are set:
   from?:     [x, y];        // arrow start
   to?:       [x, y];        // arrow end
   position?: [x, y];        // single point (notes)
@@ -186,9 +186,9 @@ Should print `... valid` for each.
 
 This spec follows semantic versioning at the field level:
 
-- **Patch** (`1.0.x`) — clarifications, fixed typos, expanded enums. Backward compatible.
-- **Minor** (`1.x`)  — new optional fields. Backward compatible.
-- **Major** (`2.x`)  — breaking changes (renamed/removed fields, type changes).
+- **Patch** (`1.0.x`): clarifications, fixed typos, expanded enums. Backward compatible.
+- **Minor** (`1.x`): new optional fields. Backward compatible.
+- **Major** (`2.x`): breaking changes (renamed/removed fields, type changes).
 
 The `schema_version` field is a string and may be a major.minor pair (e.g. `"2.1"`). Producers should emit the highest version they fully implement.
 
@@ -200,7 +200,7 @@ The `schema_version` field is a string and may be a major.minor pair (e.g. `"2.1
 
 ## Use it
 
-If you're building anything that takes a screenshot and feeds an agent, you're welcome to read or write this format directly — no payment, no attribution required. The desktop app at [slimsnap.ai](https://slimsnap.ai) is the easiest producer; nothing stops you from writing your own.
+If you're building anything that takes a screenshot and feeds an agent, you're welcome to read or write this format directly. No payment, no attribution required. The desktop app at [slimsnap.ai](https://slimsnap.ai) is the easiest producer; nothing stops you from writing your own.
 
 A few obvious adjacencies if you want to pick up the thread:
 
@@ -209,7 +209,7 @@ A few obvious adjacencies if you want to pick up the thread:
 - A CLI that turns a saved PNG + manual annotations into SlimSnap JSON for batch workflows.
 - A Claude Code / Aider slash-command that ingests SlimSnap JSON files directly.
 
-Pull requests welcome on the spec itself — for new element types, new annotation `intent` values, new top-level fields. Keep them additive (minor version) where possible.
+Pull requests welcome on the spec itself, for new element types, new annotation `intent` values, new top-level fields. Keep them additive (minor version) where possible.
 
 ---
 
