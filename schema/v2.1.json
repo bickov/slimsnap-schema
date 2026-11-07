@@ -1,0 +1,520 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slimsnap.ai/schema/v2.1.json",
+  "title": "SlimSnap Export",
+  "description": "Structured screenshot and screen-recording output for AI agents, pasteable as text into terminal-based agents like Claude Code, Aider, and Codex CLI. v2 introduced frames: a regular screenshot is one frame; a scrollable capture is several frames stacked vertically. v2.1 adds recordings: mode 'video', temporal frames placed in time, a media block, the interactions (clicks and scrolls that changed the screen) and the transcript of what was said.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "captured_at",
+    "mode",
+    "capture",
+    "frames",
+    "estimated_tokens"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.1",
+      "description": "SlimSnap schema version. '2.1' for this spec. Every 2.0 document is also a valid 2.1 document once its version field says 2.1: 2.1 only adds optional fields and enum values."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of when the screenshot was captured."
+    },
+    "mode": {
+      "enum": [
+        "single",
+        "scroll",
+        "video"
+      ],
+      "description": "'single' for a regular screenshot (one frame), 'scroll' for a scrollable capture (one frame per page), 'video' for a recording (one frame per screen the user visited)."
+    },
+    "capture": {
+      "type": "object",
+      "required": [
+        "width_px",
+        "height_px"
+      ],
+      "description": "Total pixel dimensions of the whole capture (all frames stacked).",
+      "properties": {
+        "width_px": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height_px": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "description": "Metadata about the captured surface. For a recording this is where frame 0 was taken; later frames carry their own 'screen' when it changed.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the captured window/tab."
+        },
+        "app": {
+          "type": "string",
+          "description": "Application name (e.g., 'Safari')."
+        },
+        "url": {
+          "type": "string",
+          "description": "URL if the captured surface was a web page."
+        }
+      }
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The content. A single screenshot has exactly one frame; a scroll capture stacks frames top to bottom; a recording orders them in time. All coordinates inside a frame are normalized 0-1 against that frame's dims.",
+      "items": {
+        "$ref": "#/$defs/frame"
+      }
+    },
+    "media": {
+      "type": "object",
+      "description": "Recordings only: the movie the frames were taken from.",
+      "required": [
+        "type",
+        "file",
+        "duration_ms",
+        "fps"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "video"
+          ],
+          "description": "Always 'video' in 2.1."
+        },
+        "file": {
+          "type": "string",
+          "description": "Path or file name of the movie. A saved export puts it next to the JSON; a copied export may point at a temporary file."
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fps": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "interactions": {
+      "type": "array",
+      "description": "Recordings only: what the user did that moved the screen on, in time order. 'frame' is the screen it happened on, 'result_frame' the screen it produced, which is what makes a recording replayable rather than merely watchable.",
+      "items": {
+        "$ref": "#/$defs/interaction"
+      }
+    },
+    "transcript": {
+      "type": "array",
+      "description": "Recordings only: everything said while recording, transcribed on device, in time order. The same sentences appear as voice annotations on the frame they were said about.",
+      "items": {
+        "$ref": "#/$defs/transcript_line"
+      }
+    },
+    "ai_enrichment": {
+      "description": "Optional LLM-generated metadata (intent, suggested actions). Absent or null if not enriched.",
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "estimated_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Approximate token count when this JSON is fed to an LLM."
+    }
+  },
+  "$defs": {
+    "frame": {
+      "type": "object",
+      "required": [
+        "index",
+        "kind",
+        "dims",
+        "position",
+        "elements",
+        "annotations"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based frame order: top to bottom for spatial frames, first to last for temporal frames."
+        },
+        "kind": {
+          "enum": [
+            "spatial",
+            "temporal"
+          ],
+          "description": "'spatial' frames stack vertically (screenshots and scroll captures). 'temporal' frames follow each other in time (recordings)."
+        },
+        "dims": {
+          "type": "object",
+          "required": [
+            "width_px",
+            "height_px"
+          ],
+          "description": "Pixel dimensions of THIS frame. Coordinates inside the frame are normalized against these.",
+          "properties": {
+            "width_px": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height_px": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "position": {
+          "type": "object",
+          "description": "Where this frame sits inside the whole capture. Spatial frames carry scroll_y_px, temporal frames carry t_ms.",
+          "properties": {
+            "scroll_y_px": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Spatial frames: pixel offset of this frame's top edge from the top of the whole capture."
+            },
+            "t_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Temporal frames: milliseconds from the start of the recording at which this screen was captured."
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "scroll_y_px"
+              ]
+            },
+            {
+              "required": [
+                "t_ms"
+              ]
+            }
+          ]
+        },
+        "images": {
+          "type": "array",
+          "description": "Image files backing this frame. Present only when images were saved to disk; inline/copied JSON omits it. A recording saves one still per frame.",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "offset_y_px",
+              "height_px"
+            ],
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "offset_y_px": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Offset of this image inside the frame."
+              },
+              "height_px": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "elements": {
+          "type": "array",
+          "description": "Detected UI elements with OCR text and bounding boxes, in this frame's coordinate space.",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "description": "User-drawn annotations in this frame's coordinate space.",
+          "items": {
+            "$ref": "#/$defs/annotation"
+          }
+        },
+        "unchanged": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Temporal frames only: ids of elements from EARLIER frames that are still on screen here, unchanged in text, type and place. They are not repeated in 'elements'; a target_ref may point at one of them."
+        },
+        "screen": {
+          "type": "object",
+          "description": "Temporal frames only: where this frame was taken, present when it differs from the frame before (the top-level 'screen' is frame 0's).",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Title of the captured window/tab."
+            },
+            "app": {
+              "type": "string",
+              "description": "Application name (e.g., 'Safari')."
+            },
+            "url": {
+              "type": "string",
+              "description": "URL if the captured surface was a web page."
+            }
+          }
+        }
+      }
+    },
+    "bbox": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x, y, width, height] in normalized 0-1 coordinates relative to the FRAME."
+    },
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[x, y] in normalized 0-1 coordinates relative to the FRAME."
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "bbox"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable identifier, unique across ALL frames of the capture."
+        },
+        "type": {
+          "enum": [
+            "text",
+            "button",
+            "input",
+            "link",
+            "image",
+            "label",
+            "unknown"
+          ]
+        },
+        "value": {
+          "description": "Text content or structured value of the element."
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Average color of the element region, e.g. '#3B82F6'."
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "color"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "arrow",
+            "rectangle",
+            "highlight",
+            "callout",
+            "note"
+          ]
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "from": {
+          "$ref": "#/$defs/point"
+        },
+        "to": {
+          "$ref": "#/$defs/point"
+        },
+        "position": {
+          "$ref": "#/$defs/point"
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "text": {
+          "type": "string"
+        },
+        "target_ref": {
+          "type": "string",
+          "description": "ID of the element this annotation references. IDs are unique across frames, so this may point into an adjacent frame when the target sits on a frame boundary."
+        },
+        "intent": {
+          "enum": [
+            "highlight",
+            "explain",
+            "action",
+            "question"
+          ]
+        },
+        "source": {
+          "enum": [
+            "voice"
+          ],
+          "description": "'voice': the user said this aloud while recording and it was transcribed on device; the text is a caption placed where the cursor was. Absent for drawn annotations."
+        }
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "required": [
+        "id",
+        "t_ms",
+        "source",
+        "frame",
+        "result_frame",
+        "effect",
+        "change"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "e.g. 'ix_001'."
+        },
+        "t_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source": {
+          "enum": [
+            "click",
+            "scroll",
+            "screen"
+          ],
+          "description": "'click': a click was observed and the screen followed it. 'scroll': a wheel or trackpad scroll was observed and the screen followed it. 'screen': the screen changed and nothing was watching the mouse."
+        },
+        "point": {
+          "$ref": "#/$defs/point",
+          "description": "Where the click landed, on 'frame'. Only with source 'click'."
+        },
+        "anchor": {
+          "$ref": "#/$defs/point",
+          "description": "Where to point at this interaction on 'frame': the click, or the tip of the annotation it was attributed to."
+        },
+        "frame": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the frame showing the screen the interaction happened on."
+        },
+        "result_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index of the frame showing what it produced."
+        },
+        "target_ref": {
+          "type": "string",
+          "description": "Id of the element acted on."
+        },
+        "target_source": {
+          "enum": [
+            "click",
+            "annotation"
+          ],
+          "description": "How target_ref was found: from the click position, or inferred from the annotation the user drew just before the screen moved."
+        },
+        "target": {
+          "type": "object",
+          "description": "What the OS said the control was. Absent without Accessibility.",
+          "properties": {
+            "role": {
+              "type": "string",
+              "description": "e.g. 'AXButton', 'Link'."
+            },
+            "kind": {
+              "enum": [
+                "control",
+                "text",
+                "background",
+                "unknown"
+              ]
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        },
+        "effect": {
+          "enum": [
+            "navigation",
+            "scroll",
+            "reveal",
+            "update"
+          ],
+          "description": "'navigation': most of what was on screen is gone, replaced. 'scroll': the same page, moved. 'reveal': everything is still there and something new appeared (a menu, a modal). 'update': the same content in a different state (a selection, a toggle)."
+        },
+        "scrolled": {
+          "type": "number",
+          "description": "Scroll only: how far the page moved as a fraction of the viewport, positive downward, 1.0 is one screenful."
+        },
+        "change": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How much of the screen changed, 0-1."
+        },
+        "changed": {
+          "$ref": "#/$defs/bbox",
+          "description": "The part of the screen that changed."
+        }
+      }
+    },
+    "transcript_line": {
+      "type": "object",
+      "required": [
+        "t0",
+        "t1",
+        "text"
+      ],
+      "properties": {
+        "t0": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Start, ms from the start of the recording."
+        },
+        "t1": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "End, ms."
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

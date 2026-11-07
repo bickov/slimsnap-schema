@@ -1,0 +1,346 @@
+{
+  "schema_version": "2.1",
+  "captured_at": "2026-11-07T09:49:42Z",
+  "mode": "video",
+  "capture": {
+    "width_px": 2560,
+    "height_px": 3212
+  },
+  "screen": {
+    "title": "design - Google Search - Google Chrome",
+    "app": "Google Chrome",
+    "url": "https://www.google.com/search?q=design"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "kind": "temporal",
+      "dims": {
+        "width_px": 2560,
+        "height_px": 1606
+      },
+      "position": {
+        "t_ms": 11091
+      },
+      "images": [
+        {
+          "file": "SlimSnap 2026-11-07 11-49-42 frame-1.png",
+          "offset_y_px": 0,
+          "height_px": 1606
+        }
+      ],
+      "elements": [
+        {
+          "id": "el_001",
+          "type": "button",
+          "value": "Google",
+          "bbox": [
+            0.009,
+            0.026,
+            0.073,
+            0.038
+          ]
+        },
+        {
+          "id": "el_002",
+          "type": "input",
+          "value": "design",
+          "bbox": [
+            0.129,
+            0.034,
+            0.038,
+            0.02
+          ]
+        },
+        {
+          "id": "el_005",
+          "type": "button",
+          "value": "Images",
+          "bbox": [
+            0.217,
+            0.114,
+            0.036,
+            0.018
+          ]
+        },
+        {
+          "id": "el_012",
+          "type": "text",
+          "value": "Design.com",
+          "bbox": [
+            0.158,
+            0.316,
+            0.058,
+            0.018
+          ],
+          "color": "#C8C9CE"
+        },
+        {
+          "id": "el_013",
+          "type": "link",
+          "value": "https://www.design.com › domain-name",
+          "bbox": [
+            0.158,
+            0.34,
+            0.168,
+            0.018
+          ],
+          "color": "#A7AAAE"
+        },
+        {
+          "id": "el_014",
+          "type": "link",
+          "value": "Design.com | Secure your domain today | Perfect domain name",
+          "bbox": [
+            0.128,
+            0.37,
+            0.47,
+            0.032
+          ],
+          "color": "#90ACDD"
+        },
+        {
+          "id": "el_020",
+          "type": "text",
+          "value": "born.lv | UX+UI design and development",
+          "bbox": [
+            0.128,
+            0.576,
+            0.321,
+            0.032
+          ],
+          "color": "#7E95BE"
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "type": "callout",
+          "color": "#EF4444",
+          "position": [
+            0.705,
+            0.405
+          ],
+          "text": "This is a voice recording test",
+          "target_ref": "el_014",
+          "source": "voice"
+        },
+        {
+          "id": "a2",
+          "type": "arrow",
+          "color": "#EF4444",
+          "from": [
+            0.32,
+            0.3
+          ],
+          "to": [
+            0.19,
+            0.385
+          ],
+          "target_ref": "el_014",
+          "intent": "action"
+        },
+        {
+          "id": "a3",
+          "type": "callout",
+          "color": "#EF4444",
+          "position": [
+            0.187,
+            0.388
+          ],
+          "text": "Now I click this link and go to the next page",
+          "target_ref": "el_014",
+          "source": "voice"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "kind": "temporal",
+      "dims": {
+        "width_px": 2560,
+        "height_px": 1606
+      },
+      "position": {
+        "t_ms": 14750
+      },
+      "images": [
+        {
+          "file": "SlimSnap 2026-11-07 11-49-42 frame-2.png",
+          "offset_y_px": 0,
+          "height_px": 1606
+        }
+      ],
+      "screen": {
+        "title": "Domain Names | Register a Domain Instantly | Design.com - Google Chrome",
+        "app": "Google Chrome",
+        "url": "https://www.design.com/domain-names"
+      },
+      "elements": [
+        {
+          "id": "el_033",
+          "type": "text",
+          "value": "DESIGN.COM",
+          "bbox": [
+            0.128,
+            0.008,
+            0.118,
+            0.026
+          ],
+          "color": "#CFCFCF"
+        },
+        {
+          "id": "el_036",
+          "type": "button",
+          "value": "Websites",
+          "bbox": [
+            0.599,
+            0.012,
+            0.062,
+            0.014
+          ]
+        },
+        {
+          "id": "el_039",
+          "type": "text",
+          "value": "Domain Names",
+          "bbox": [
+            0.098,
+            0.43,
+            0.342,
+            0.062
+          ],
+          "color": "#F7F7F7"
+        },
+        {
+          "id": "el_040",
+          "type": "text",
+          "value": "Start by entering your business name. We'll generate domains instantly.",
+          "bbox": [
+            0.098,
+            0.524,
+            0.373,
+            0.07
+          ],
+          "color": "#858585"
+        },
+        {
+          "id": "el_048",
+          "type": "input",
+          "value": "Enter keywords or your business name",
+          "bbox": [
+            0.109,
+            0.652,
+            0.222,
+            0.02
+          ]
+        },
+        {
+          "id": "el_049",
+          "type": "button",
+          "value": "Start",
+          "bbox": [
+            0.477,
+            0.648,
+            0.033,
+            0.02
+          ]
+        },
+        {
+          "id": "el_057",
+          "type": "button",
+          "value": "Accept all cookies",
+          "bbox": [
+            0.231,
+            0.954,
+            0.086,
+            0.018
+          ]
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "type": "rectangle",
+          "color": "#EF4444",
+          "bbox": [
+            0.09,
+            0.42,
+            0.36,
+            0.09
+          ],
+          "target_ref": "el_039",
+          "intent": "highlight"
+        },
+        {
+          "id": "a5",
+          "type": "callout",
+          "color": "#EF4444",
+          "position": [
+            0.306,
+            0.364
+          ],
+          "text": "The heading is too big on this page",
+          "target_ref": "el_039",
+          "source": "voice"
+        }
+      ]
+    }
+  ],
+  "media": {
+    "type": "video",
+    "file": "SlimSnap 2026-11-07 11-49-42.mp4",
+    "duration_ms": 41863,
+    "fps": 30
+  },
+  "interactions": [
+    {
+      "id": "ix_001",
+      "t_ms": 11091,
+      "source": "click",
+      "point": [
+        0.187,
+        0.388
+      ],
+      "anchor": [
+        0.187,
+        0.388
+      ],
+      "frame": 0,
+      "result_frame": 1,
+      "target_ref": "el_014",
+      "target_source": "click",
+      "target": {
+        "role": "AXLink",
+        "kind": "control",
+        "label": "Design.com | Secure your domain today"
+      },
+      "effect": "navigation",
+      "change": 0.408,
+      "changed": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ],
+  "transcript": [
+    {
+      "t0": 5,
+      "t1": 3514,
+      "text": "This is a voice recording test"
+    },
+    {
+      "t0": 5210,
+      "t1": 12004,
+      "text": "Now I click this link and go to the next page"
+    },
+    {
+      "t0": 29871,
+      "t1": 32708,
+      "text": "The heading is too big on this page"
+    }
+  ],
+  "estimated_tokens": 1240
+}

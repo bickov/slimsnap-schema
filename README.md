@@ -1,10 +1,10 @@
 # SlimSnap Schema
 
-**The open JSON format for screenshots fed to AI agents.**
+**The open JSON format for screenshots and screen recordings fed to AI agents.**
 
 Terminal-based AI agents — [Claude Code](https://www.anthropic.com/claude-code), [Aider](https://aider.chat), [Codex CLI](https://github.com/openai/codex), [Cursor CLI](https://docs.cursor.com/cli) — can't accept image input. To talk to them about a UI, you have to describe it in English. That's slow, lossy, and the agent still guesses where things are.
 
-SlimSnap is a Mac app that turns any screenshot into a small JSON blob: OCR'd text, element bounding boxes, your annotations. You paste it into the terminal like code. Your agent reads it like code.
+SlimSnap is a Mac and Windows app that turns any screenshot into a small JSON blob: OCR'd text, element bounding boxes, your annotations. Since 0.6.0 it does the same for a screen recording: one frame per screen you visited, the clicks and scrolls that led from one to the next, and what you said while recording, as captions. You paste it into the terminal like code. Your agent reads it like code.
 
 This repository is the open, MIT-licensed **specification** of that JSON format. The desktop app that produces it is closed-source (free during launch, with a paid tier planned); the format itself is free for anyone to read, write, validate, or implement.
 
@@ -61,18 +61,21 @@ The result: agents stop hallucinating about what's in the image. They cite eleme
 
 ## Schema
 
-The formal JSON Schema (draft 2020-12) lives at [`schema/v2.0.json`](schema/v2.0.json). Use it to validate any SlimSnap export. The previous major version stays available at [`schema/v1.0.json`](schema/v1.0.json) with examples in [`examples/v1/`](examples/v1).
+The formal JSON Schema (draft 2020-12) lives at [`schema/v2.1.json`](schema/v2.1.json). Use it to validate any SlimSnap export. [`schema/v2.0.json`](schema/v2.0.json) is the same spec without recordings; the previous major version stays available at [`schema/v1.0.json`](schema/v1.0.json) with examples in [`examples/v1/`](examples/v1).
 
 ### Top level
 
 | Field              | Type    | Required | Notes                                                              |
 | ------------------ | ------- | -------- | ------------------------------------------------------------------ |
-| `schema_version`   | string  | yes      | `"2.0"` for this spec.                                             |
+| `schema_version`   | string  | yes      | `"2.1"` for this spec (`"2.0"` without recordings).                |
 | `captured_at`      | string  | yes      | ISO-8601 timestamp.                                                |
-| `mode`             | string  | yes      | `"single"` (one frame) or `"scroll"` (scrollable capture).         |
+| `mode`             | string  | yes      | `"single"` (one frame), `"scroll"` (scrollable capture) or `"video"` (recording). |
 | `capture`          | object  | yes      | `{ width_px, height_px }` of the WHOLE capture, all frames stacked. |
-| `screen`           | object  | no       | `{ title?, app?, url? }`. Where the screenshot came from.          |
-| `frames`           | array   | yes      | The content, top to bottom. At least one frame.                    |
+| `screen`           | object  | no       | `{ title?, app?, url? }`. Where the capture came from (frame 0 for a recording). |
+| `frames`           | array   | yes      | The content, top to bottom or first to last. At least one frame.   |
+| `media`            | object  | video    | `{ type, file, duration_ms, fps }`. The movie the frames came from. |
+| `interactions`     | array   | video    | Clicks and scrolls that moved the screen on, with the frame before and after. |
+| `transcript`       | array   | video    | `[{ t0, t1, text }]`. Everything said while recording, in time order. |
 | `ai_enrichment`    | object  | no       | Reserved for LLM-generated metadata. Absent when not enriched.     |
 | `estimated_tokens` | integer | yes      | Approximate token count if fed to an LLM. For routing decisions.   |
 
@@ -81,12 +84,15 @@ The formal JSON Schema (draft 2020-12) lives at [`schema/v2.0.json`](schema/v2.0
 ```ts
 {
   index:    number;                      // 0-based, top to bottom
-  kind:     "spatial";                   // frames stack vertically (video will add "temporal")
+  kind:     "spatial" | "temporal";      // spatial frames stack vertically, temporal frames follow in time
   dims:     { width_px, height_px };     // THIS frame's pixel size
-  position: { scroll_y_px: number };     // top edge's offset inside the whole capture
+  position: { scroll_y_px: number }      // spatial: top edge's offset inside the whole capture
+          | { t_ms: number };            // temporal: ms from the start of the recording
   images?:  [{ file, offset_y_px, height_px }];  // present only when saved to disk
   elements:    Element[];                // coordinates normalized 0..1 within THIS frame
   annotations: Annotation[];             // same coordinate space
+  unchanged?:  string[];                 // temporal: ids of earlier elements still on screen, not repeated
+  screen?:     { title?, app?, url? };   // temporal: where this frame was taken, when it changed
 }
 ```
 
@@ -121,10 +127,43 @@ Why frames: a 9,000px-tall scroll capture is useless as one coordinate space (a 
   text?:       string;      // callout / note copy
   target_ref?: string;      // ID of the element this points at
   intent?:     "highlight" | "explain" | "action" | "question";
+  source?:     "voice";     // said aloud while recording, transcribed on device; absent when drawn
 }
 ```
 
 All coordinates are **normalized 0..1** floats relative to the FRAME's dimensions (`frames[].dims`), so the JSON survives image resizing and rescaling. Element and annotation IDs are unique across the whole capture, so a `target_ref` near a frame boundary may point into the adjacent frame.
+
+### Recordings (`mode: "video"`, since 2.1)
+
+A recording is not a video file an agent has to watch. It is a list of the screens the user visited, what they did to get from one to the next, and what they said about each. Full example: [`examples/video-recording.json`](examples/video-recording.json).
+
+- One **temporal frame** per screen. A new frame is cut when the screen changes enough (a page load, a modal, a scroll past one viewport). Frames carry `position.t_ms`, their own `screen` when the app, title or URL changed, and `unchanged`, the ids of elements from earlier frames that are still there so the sidebar is not repeated six times.
+- **Captions** are annotations with `source: "voice"`. Each sentence lands on the frame it was said on, at the place the cursor was, with `target_ref` resolved to the element under it when there is one. So "this button is wrong" arrives as a callout pointing at `el_014`.
+- Drawn annotations work like in a screenshot and sit on the frame they were drawn on. In the app they stay visible until the next click or scroll in the recorded app, then fade; the JSON keeps them on their frame.
+- **Interactions** are the edges between frames:
+
+```ts
+{
+  id:            string;              // "ix_001"
+  t_ms:          number;
+  source:        "click" | "scroll" | "screen";   // what was observed; "screen" = the screen changed, nothing watched the mouse
+  point?:        [x, y];              // the click, on `frame`
+  anchor?:       [x, y];              // where to point at this interaction on `frame`
+  frame:         number;              // the screen it happened on
+  result_frame:  number;              // the screen it produced
+  target_ref?:   string;              // element acted on
+  target_source?: "click" | "annotation";  // from the click position, or inferred from the annotation drawn just before
+  target?:       { role?, kind?, label? }; // what the OS said the control was (needs Accessibility)
+  effect:        "navigation" | "scroll" | "reveal" | "update";
+  scrolled?:     number;              // scroll only: fraction of the viewport, positive downward
+  change:        number;              // how much of the screen moved, 0..1
+  changed?:      [x, y, w, h];        // where
+}
+```
+
+- The **transcript** repeats every sentence with its start and end time, so an agent can read the narration straight through, and `media` points at the movie for a human who wants to watch.
+
+To replay a recording: walk `interactions` in order, read `frames[frame]` for the state, `target_ref` for what was acted on, `frames[result_frame]` for what came of it, and the voice annotations on each frame for why. An agent that follows a bug report this way knows the exact element and the exact page, not "somewhere in checkout".
 
 ---
 
@@ -134,6 +173,7 @@ Any JSON Schema 2020-12 validator works. With [Ajv](https://ajv.js.org):
 
 ```bash
 npm install -g ajv-cli ajv-formats
+ajv validate -s schema/v2.1.json -d examples/video-recording.json --spec=draft2020 -c ajv-formats
 ajv validate -s schema/v2.0.json -d examples/annotated-screenshot.json --spec=draft2020 -c ajv-formats
 ajv validate -s schema/v2.0.json -d examples/scroll-capture.json --spec=draft2020 -c ajv-formats
 ```
@@ -152,6 +192,8 @@ This spec follows semantic versioning at the field level:
 
 The `schema_version` field is a string and may be a major.minor pair (e.g. `"2.1"`). Producers should emit the highest version they fully implement.
 
+**v2.0 → v2.1:** additive. New `mode: "video"`, `kind: "temporal"` frames with `position.t_ms`, per-frame `screen` and `unchanged`, top-level `media`, `interactions` and `transcript`, and `source: "voice"` on annotations. A 2.0 consumer that ignores unknown fields reads a recording as a set of frames with annotations, which is still useful.
+
 **v1 → v2:** v2's breaking change is the frame container. v1's top-level `image` / `elements` / `annotations` became `capture` + `frames[].elements` / `frames[].annotations`. A v1 document reads as a v2 document with one implicit frame: `mode: "single"`, `dims` = `image` dims, `position.scroll_y_px: 0`. Consumers that want to accept both should branch on the presence of `frames`.
 
 ---
@@ -163,7 +205,7 @@ If you're building anything that takes a screenshot and feeds an agent, you're w
 A few obvious adjacencies if you want to pick up the thread:
 
 - A browser extension that emits SlimSnap JSON from a webpage selection.
-- A Linux/Windows producer using their respective OCR APIs.
+- A Linux producer using the platform OCR.
 - A CLI that turns a saved PNG + manual annotations into SlimSnap JSON for batch workflows.
 - A Claude Code / Aider slash-command that ingests SlimSnap JSON files directly.
 
